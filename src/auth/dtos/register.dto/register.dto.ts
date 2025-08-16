@@ -1,0 +1,9 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+
+export class RegisterDto {
+  @IsEmail() email: string;
+  @IsString() @MinLength(8) password: string;
+  @IsOptional() @IsString() name?: string;
+}
