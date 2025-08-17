@@ -1,4 +1,15 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Req, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+  Post,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles/roles.guard';
@@ -10,7 +21,7 @@ import { CreateUserDto } from './dtos/create-user.dto/create-user.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly users: UsersService) {}
-
+// get profile of user
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@Req() req: any) {
@@ -22,25 +33,44 @@ export class UsersController {
   }
 
   // Admin-only create user (e.g., to create other admins)
+  // create user
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @Post()
+  @Post('create')
   create(@Body() dto: CreateUserDto) {
     return this.users.create(dto);
   }
 
+  // list users
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get()
-  findAll() {
-    return this.users.findAll();
-  }
+  async findAll(@Query('page') page = '1', @Query('limit') limit = '10') {
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
 
+    return this.users.findAll({ page: pageNumber, limit: pageSize });
+  }
+// update role
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Patch(':id/role')
   updateRole(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.users.updateRole(id, dto);
   }
+  // remove role
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+@Patch(':id/role/remove')
+async removeRole(@Param('id') id: string) {
+  return this.users.removeRole(id);
 }
 
+// delete user
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.users.delete(id);
+  }
+}
